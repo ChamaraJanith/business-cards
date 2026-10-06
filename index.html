@@ -124,28 +124,51 @@
         const errorMsg = document.getElementById('error-msg');
         const downloadBtn = document.getElementById('download-btn');
 
-        function triggerAutoDownload(url, filename) {
-            // Some mobile browsers block auto-downloads, but we try anyway.
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = filename;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+        async function forceDownload(url, filename) {
+            try {
+                // Fetch the image as a blob to force download instead of opening in browser
+                const response = await fetch(url);
+                const blob = await response.blob();
+                const blobUrl = window.URL.createObjectURL(blob);
+                
+                const link = document.createElement('a');
+                link.href = blobUrl;
+                link.download = filename;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                // Cleanup
+                setTimeout(() => window.URL.revokeObjectURL(blobUrl), 100);
+            } catch (error) {
+                console.error("Download failed:", error);
+                // Fallback for older browsers
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = filename;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
         }
 
         function onImageLoaded(imgUrl, extension) {
             loader.style.display = 'none';
             imgElement.style.display = 'block';
             
+            const filename = cardId + '_Business_Card.' + extension;
+
             // Setup the manual download button
-            downloadBtn.href = imgUrl;
-            downloadBtn.download = cardId + '_Business_Card.' + extension;
             downloadBtn.style.display = 'block';
+            downloadBtn.href = 'javascript:void(0)';
+            downloadBtn.onclick = function(e) {
+                e.preventDefault();
+                forceDownload(imgUrl, filename);
+            };
 
             // Try to auto-download after a short delay so the user sees the card first
             setTimeout(() => {
-                triggerAutoDownload(imgUrl, cardId + '_Business_Card.' + extension);
+                forceDownload(imgUrl, filename);
             }, 1000);
         }
 

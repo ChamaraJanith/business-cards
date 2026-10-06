@@ -10,8 +10,9 @@
             padding: 0;
             width: 100%;
             height: 100%;
-            background-color: #1a1a1a; /* Dark premium background */
+            background-color: #1a1a1a;
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
             overflow: hidden;
@@ -20,7 +21,7 @@
         
         .card-container {
             width: 100%;
-            height: 100%;
+            height: calc(100% - 80px); /* Leave space for button */
             display: flex;
             justify-content: center;
             align-items: center;
@@ -37,7 +38,7 @@
             box-shadow: 0 15px 35px rgba(0,0,0,0.6);
             animation: fadeIn 0.6s ease-out forwards;
             opacity: 0;
-            display: none; /* Hidden until loaded */
+            display: none;
         }
 
         @keyframes fadeIn {
@@ -55,6 +56,7 @@
             box-sizing: border-box;
             animation: rotation 1s linear infinite;
             position: absolute;
+            top: 50%;
         }
 
         @keyframes rotation {
@@ -72,6 +74,35 @@
             background: rgba(0,0,0,0.5);
             border-radius: 8px;
         }
+
+        /* Download Button Styles */
+        .download-btn {
+            display: none; /* Hidden until card loads */
+            background: linear-gradient(135deg, #007bff, #0056b3);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 25px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0, 123, 255, 0.4);
+            margin-bottom: 20px;
+            text-decoration: none;
+            transition: transform 0.2s, box-shadow 0.2s;
+            animation: slideUp 0.5s ease-out forwards;
+            animation-delay: 0.5s;
+            opacity: 0;
+        }
+
+        .download-btn:active {
+            transform: scale(0.95);
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
     </style>
 </head>
 <body>
@@ -83,29 +114,62 @@
         <img id="business-card" alt="Business Card">
     </div>
 
+    <a id="download-btn" class="download-btn" download>Save Card to Device</a>
+
     <script>
-        // Get the 'id' parameter from the URL (e.g., ?id=nimal)
         const urlParams = new URLSearchParams(window.location.search);
         const cardId = urlParams.get('id');
         const imgElement = document.getElementById('business-card');
         const loader = document.getElementById('loader');
         const errorMsg = document.getElementById('error-msg');
+        const downloadBtn = document.getElementById('download-btn');
+
+        function triggerAutoDownload(url, filename) {
+            // Some mobile browsers block auto-downloads, but we try anyway.
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function onImageLoaded(imgUrl, extension) {
+            loader.style.display = 'none';
+            imgElement.style.display = 'block';
+            
+            // Setup the manual download button
+            downloadBtn.href = imgUrl;
+            downloadBtn.download = cardId + '_Business_Card.' + extension;
+            downloadBtn.style.display = 'block';
+
+            // Try to auto-download after a short delay so the user sees the card first
+            setTimeout(() => {
+                triggerAutoDownload(imgUrl, cardId + '_Business_Card.' + extension);
+            }, 1000);
+        }
 
         if (cardId) {
-            // We assume images are saved as .jpg by default
-            imgElement.src = 'cards/' + cardId + '.jpg';
+            const jpgUrl = 'cards/' + cardId + '.jpg';
+            const pngUrl = 'cards/' + cardId + '.png';
+
+            imgElement.src = jpgUrl;
             
             imgElement.onload = function() {
-                loader.style.display = 'none';
-                imgElement.style.display = 'block';
+                onImageLoaded(jpgUrl, 'jpg');
+                // Reset onload to prevent multiple triggers if src changes
+                imgElement.onload = null; 
             };
 
-            // If .jpg fails, try .png
             let attempts = 0;
             imgElement.onerror = function() {
                 if (attempts === 0) {
                     attempts++;
-                    imgElement.src = 'cards/' + cardId + '.png';
+                    imgElement.src = pngUrl;
+                    imgElement.onload = function() {
+                        onImageLoaded(pngUrl, 'png');
+                        imgElement.onload = null;
+                    }
                 } else {
                     loader.style.display = 'none';
                     errorMsg.style.display = 'block';

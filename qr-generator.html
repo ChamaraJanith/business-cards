@@ -1,95 +1,239 @@
 <!DOCTYPE html>
-<html lang="si">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>QR Code Generator</title>
+    <title>Card Admin Panel</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7f6;
+            margin: 0;
+            padding: 20px;
             display: flex;
             justify-content: center;
-            align-items: center;
-            height: 100vh;
-            background-color: #f0f2f5;
-            margin: 0;
         }
-        .container {
+        .dashboard {
             background-color: white;
             padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-            text-align: center;
-            max-width: 400px;
+            border-radius: 12px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+            max-width: 500px;
             width: 100%;
         }
         h2 {
-            color: #333;
+            color: #2c3e50;
+            margin-top: 0;
+            text-align: center;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+        }
+        .form-group {
             margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 600;
         }
         input[type="text"] {
-            width: calc(100% - 22px);
-            padding: 10px;
-            margin-bottom: 20px;
+            width: 100%;
+            padding: 12px;
             border: 1px solid #ccc;
-            border-radius: 5px;
+            border-radius: 6px;
             font-size: 16px;
+            box-sizing: border-box;
+            transition: border-color 0.3s;
         }
-        button {
+        input[type="text"]:focus {
+            border-color: #007bff;
+            outline: none;
+        }
+        .hint {
+            font-size: 13px;
+            color: #888;
+            margin-top: 5px;
+        }
+        button.action-btn {
             background-color: #007bff;
             color: white;
             border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
+            padding: 12px;
+            border-radius: 6px;
             font-size: 16px;
+            font-weight: bold;
             cursor: pointer;
+            width: 100%;
             transition: background-color 0.3s;
         }
-        button:hover {
+        button.action-btn:hover {
             background-color: #0056b3;
         }
+        .result-area {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            text-align: center;
+            display: none;
+            border: 1px solid #e9ecef;
+        }
         #qrcode {
-            margin-top: 20px;
             display: flex;
             justify-content: center;
+            margin: 20px 0;
+            padding: 10px;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #eee;
         }
-        p {
+        .url-display {
+            background: #e9ecef;
+            padding: 10px;
+            border-radius: 4px;
+            word-break: break-all;
             font-size: 14px;
-            color: #666;
-            margin-bottom: 20px;
+            color: #333;
+            margin-bottom: 15px;
+        }
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .btn-group button, .btn-group a {
+            flex: 1;
+            padding: 10px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            text-decoration: none;
+            text-align: center;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        .btn-download { background-color: #28a745; color: white; }
+        .btn-github { background-color: #24292e; color: white; }
+        
+        .instructions {
+            margin-top: 20px;
+            font-size: 14px;
+            color: #d9534f;
+            font-weight: bold;
+            padding: 10px;
+            background: #fdf5f5;
+            border-radius: 6px;
+            border-left: 4px solid #d9534f;
+            text-align: left;
         }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h2>QR Code Generator</h2>
-    <p>Enter Link</p>
-    <input type="text" id="urlInput" placeholder="https://www.canva.com/design/.../view">
-    <button onclick="generateQR()">Design QR</button>
-    <div id="qrcode"></div>
+<div class="dashboard">
+    <h2>Business Card Admin Panel</h2>
+    
+    <div class="form-group">
+        <label>Your Website Link (Base URL):</label>
+        <input type="text" id="baseUrlInput" placeholder="https://chamarajanith.github.io/business-cards/">
+        <div class="hint">This is saved automatically. Make sure it ends with a '/'.</div>
+    </div>
+
+    <div class="form-group">
+        <label>New Client Name (ID):</label>
+        <input type="text" id="nameInput" placeholder="e.g. nimal">
+        <div class="hint">Use simple letters and no spaces.</div>
+    </div>
+
+    <button class="action-btn" onclick="generateSystem()">Generate QR & Link</button>
+
+    <div id="resultArea" class="result-area">
+        <h3 style="margin-top:0; color:#333;">Success!</h3>
+        
+        <div class="url-display" id="finalUrl"></div>
+        
+        <div id="qrcode"></div>
+        
+        <div class="btn-group">
+            <button class="btn-download" onclick="downloadQR()">Download QR Code</button>
+        </div>
+
+        <div class="instructions" id="instructionsText">
+            <!-- Instructions will appear here -->
+        </div>
+        
+        <div class="btn-group" style="margin-top: 10px;">
+            <a href="https://github.com/" target="_blank" class="btn-github">Go to GitHub</a>
+        </div>
+    </div>
 </div>
 
 <script>
-    function generateQR() {
-        var url = document.getElementById("urlInput").value;
-        var qrcodeContainer = document.getElementById("qrcode");
+    // Load saved Base URL if exists
+    window.onload = function() {
+        var savedUrl = localStorage.getItem("baseCardUrl");
+        if(savedUrl) {
+            document.getElementById("baseUrlInput").value = savedUrl;
+        }
+    }
+
+    function generateSystem() {
+        var baseUrl = document.getElementById("baseUrlInput").value.trim();
+        var nameId = document.getElementById("nameInput").value.trim().toLowerCase();
         
-        // Clear previous QR code
+        if(!baseUrl || !nameId) {
+            alert("Please enter both the Base URL and the Client Name.");
+            return;
+        }
+
+        // Save Base URL for next time
+        localStorage.setItem("baseCardUrl", baseUrl);
+
+        // Make sure base URL ends with /
+        if(!baseUrl.endsWith('/')) {
+            baseUrl += '/';
+        }
+
+        var finalUrl = baseUrl + "?id=" + nameId;
+        
+        // Show result area
+        document.getElementById("resultArea").style.display = "block";
+        document.getElementById("finalUrl").innerText = finalUrl;
+
+        // Generate QR
+        var qrcodeContainer = document.getElementById("qrcode");
         qrcodeContainer.innerHTML = "";
         
-        if(url) {
-            new QRCode(qrcodeContainer, {
-                text: url,
-                width: 200,
-                height: 200,
-                colorDark : "#000000",
-                colorLight : "#ffffff",
-                correctLevel : QRCode.CorrectLevel.H
-            });
+        new QRCode(qrcodeContainer, {
+            text: finalUrl,
+            width: 200,
+            height: 200,
+            colorDark : "#000000",
+            colorLight : "#ffffff",
+            correctLevel : QRCode.CorrectLevel.H
+        });
+
+        // Set Instructions
+        document.getElementById("instructionsText").innerHTML = 
+            "Final Step: Please ensure you upload the <b>" + nameId + ".jpg</b> (or .png) image to the 'cards' folder on GitHub.";
+    }
+
+    function downloadQR() {
+        var qrcodeContainer = document.getElementById("qrcode");
+        var img = qrcodeContainer.querySelector("img");
+        
+        if(img && img.src) {
+            var link = document.createElement("a");
+            link.href = img.src;
+            var nameId = document.getElementById("nameInput").value.trim();
+            link.download = nameId + "_QR_Code.png";
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
         } else {
-            alert("කරුණාකර Link එකක් ඇතුලත් කරන්න.");
+            alert("Please wait a moment for the QR Code to load.");
         }
     }
 </script>
